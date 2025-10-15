@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "newsletter"
+version = "0.1.0"
+description = "Research-backed newsletter generator with Ollama, Tavily, and human-in-the-loop approval"
+authors = [{ name = "TARS Group" }]
+requires-python = ">=3.10"
+dependencies = [
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.1",
+    "tavily-python>=0.3.7",
+    "beautifulsoup4>=4.12.3",
+    "html5lib>=1.1",
+    "google-generativeai>=0.8.2",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}

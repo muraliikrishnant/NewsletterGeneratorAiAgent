@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>TARS Newsletter Builder</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main>
+      <h1>TARS Newsletter Builder</h1>
+
+      <label for="prompt">Prompt / Research Brief</label>
+      <textarea id="prompt" placeholder="e.g. robotaxi regulatory updates in the US" rows="4"></textarea>
+
+      <div class="row">
+        <label for="words">Target words</label>
+        <input id="words" type="number" value="800" />
+      </div>
+
+      <div class="actions">
+        <button id="build">Build (dry-run)</button>
+        <button id="send">Send + HITL (send draft and wait)</button>
+        <button id="publish">Publish to WordPress (after approval)</button>
+      </div>
+
+      <section id="status"></section>
+
+      <h2>Preview</h2>
+      <iframe id="preview" sandbox="allow-same-origin allow-forms allow-scripts"></iframe>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>
