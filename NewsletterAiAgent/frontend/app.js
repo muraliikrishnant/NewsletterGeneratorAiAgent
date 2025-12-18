@@ -1,5 +1,8 @@
 // Sophisticated frontend logic for Newsletter Studio
-const API_BASE = window.API_BASE || 'http://127.0.0.1:8000';
+// Auto-detect API base: use production URL if on GitHub Pages, otherwise localhost
+const API_BASE = window.location.hostname === 'muraliikrishnant.github.io' 
+  ? 'https://newsletter-ai-backend.onrender.com'
+  : (window.API_BASE || 'http://127.0.0.1:8000');
 const el = id => document.getElementById(id);
 
 // UI helpers

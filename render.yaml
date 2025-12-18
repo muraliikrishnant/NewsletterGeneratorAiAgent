@@ -1,0 +1,41 @@
+services:
+  - type: web
+    name: newsletter-ai-backend
+    runtime: python
+    plan: free
+    buildCommand: "pip install --upgrade pip && pip install -r NewsletterAiAgent/requirements.txt"
+    startCommand: "PYTHONPATH=NewsletterAiAgent/src/ uvicorn NewsletterAiAgent.api.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: LLM_PROVIDER
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: SMTP_SERVER
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USERNAME
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: IMAP_SERVER
+        value: imap.gmail.com
+      - key: IMAP_PORT
+        value: 993
+      - key: IMAP_USERNAME
+        sync: false
+      - key: IMAP_PASSWORD
+        sync: false
+      - key: EMAIL_SENDER
+        sync: false
+      - key: RECIPIENTS
+        sync: false
+      - key: HITL_POLL_INTERVAL
+        value: 30
+      - key: HITL_TIMEOUT_MINUTES
+        value: 10
+    healthCheckPath: /status
