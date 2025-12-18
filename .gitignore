@@ -1,0 +1,19 @@
+.env
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# packaging
+*.egg-info/
+
+# generated artifacts
+*.html
+
+# Project specific sensitive/large files
+hitl_status.json
+*.pdf
+project_report.txt
