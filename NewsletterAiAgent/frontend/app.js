@@ -5,6 +5,7 @@ const el = id => document.getElementById(id);
 // UI helpers
 function toast(message, type = 'info') {
   const t = el('toast');
+  if (!t) return;
   t.innerHTML = `<div class="card ${type} p-4"><div class="text-sm">${message}</div></div>`;
   t.classList.remove('hidden');
   setTimeout(() => t.classList.add('hidden'), 3500);
@@ -12,36 +13,50 @@ function toast(message, type = 'info') {
 
 function setChip(id, text, variant = 'info') {
   const c = el(id);
+  if (!c) return;
   c.textContent = text;
   c.className = `chip ${variant}`;
 }
 
 function setStatus(text) {
-  el('status').textContent = text;
+  const statusEl = el('status');
+  if (statusEl) statusEl.textContent = text;
 }
 
-// Theme toggle
-el('themeToggle').addEventListener('click', () => {
-  document.documentElement.classList.toggle('dark');
-});
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', () => {
+  // Theme toggle
+  const themeToggle = el('themeToggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      document.documentElement.classList.toggle('dark');
+    });
+  }
 
-// Sync words range and input
-const wordsRange = el('wordsRange');
-const wordsInput = el('words');
-wordsRange.addEventListener('input', () => { wordsInput.value = wordsRange.value; localStorage.setItem('tars_words', wordsRange.value); });
-wordsInput.addEventListener('input', () => { wordsRange.value = wordsInput.value; localStorage.setItem('tars_words', wordsInput.value); });
+  // Sync words range and input
+  const wordsRange = el('wordsRange');
+  const wordsInput = el('words');
+  if (wordsRange && wordsInput) {
+    wordsRange.addEventListener('input', () => { wordsInput.value = wordsRange.value; localStorage.setItem('tars_words', wordsRange.value); });
+    wordsInput.addEventListener('input', () => { wordsRange.value = wordsInput.value; localStorage.setItem('tars_words', wordsInput.value); });
+  
+    // Restore prompt/words from localStorage
+    const promptEl = el('prompt');
+    if (promptEl) promptEl.value = localStorage.getItem('tars_prompt') || '';
+    const savedWords = localStorage.getItem('tars_words');
+    if (savedWords) { wordsRange.value = savedWords; wordsInput.value = savedWords; }
+    if (promptEl) promptEl.addEventListener('input', e => localStorage.setItem('tars_prompt', e.target.value));
+  }
 
-// Restore prompt/words from localStorage
-el('prompt').value = localStorage.getItem('tars_prompt') || '';
-const savedWords = localStorage.getItem('tars_words');
-if (savedWords) { wordsRange.value = savedWords; wordsInput.value = savedWords; }
-el('prompt').addEventListener('input', e => localStorage.setItem('tars_prompt', e.target.value));
-
-// Build (dry-run)
-el('build').addEventListener('click', async () => {
-  const prompt = el('prompt').value.trim();
-  const words = parseInt(wordsInput.value || '800', 10);
-  if (!prompt) { toast('Enter a prompt to build.', 'error'); return; }
+  // Build (dry-run)
+  const buildBtn = el('build');
+  if (buildBtn) {
+    buildBtn.addEventListener('click', async () => {
+      const promptEl = el('prompt');
+      const wordsInput = el('words');
+      const prompt = promptEl ? promptEl.value.trim() : '';
+      const words = parseInt(wordsInput ? wordsInput.value : '800', 10);
+      if (!prompt) { toast('Enter a prompt to build.', 'error'); return; }
   setStatus('Building (dry-run)...');
   setChip('chipBuilt', 'Building…', 'info');
   try {
@@ -72,17 +87,22 @@ el('build').addEventListener('click', async () => {
       setStatus('Built (raw). Preview updated.');
       setChip('chipBuilt', 'Built (raw)', 'success');
     }
-  } catch (e) {
-    toast('Build error: ' + e.message, 'error');
-    setChip('chipBuilt', 'Build error', 'warn');
+      } catch (e) {
+        toast('Build error: ' + e.message, 'error');
+        setChip('chipBuilt', 'Build error', 'warn');
+      }
+    });
   }
-});
 
-// Send via HITL (can be long-running)
-el('send').addEventListener('click', async () => {
-  const prompt = el('prompt').value.trim();
-  const words = parseInt(wordsInput.value || '800', 10);
-  if (!prompt) { toast('Enter a prompt before sending.', 'error'); return; }
+  // Send via HITL (can be long-running)
+  const sendBtn = el('send');
+  if (sendBtn) {
+    sendBtn.addEventListener('click', async () => {
+      const promptEl = el('prompt');
+      const wordsInput = el('words');
+      const prompt = promptEl ? promptEl.value.trim() : '';
+      const words = parseInt(wordsInput ? wordsInput.value : '800', 10);
+      if (!prompt) { toast('Enter a prompt before sending.', 'error'); return; }
   setStatus('Sending draft and entering HITL… This may take a while.');
   setChip('chipSent', 'Sending…', 'info');
   try {
@@ -98,14 +118,17 @@ el('send').addEventListener('click', async () => {
       setStatus('Send complete. See status panel for approval.');
       setChip('chipSent', 'Draft sent', 'success');
       toast('Draft sent for HITL review.', 'success');
-    } else {
-      const txt = await resp.text();
-      toast(`Send returned ${resp.status}: ${txt.substring(0,200)}`, 'error');
-      setChip('chipSent', 'Send error', 'warn');
-    }
-  } catch (e) {
-    toast('Send error: ' + e.message, 'error');
-    setChip('chipSent', 'Send error', 'warn');
+      } catch (e) {
+        toast('Send error: ' + e.message, 'error');
+        setChip('chipSent', 'Send error', 'warn');
+      }
+    });
+  }
+
+  // Download built HTML
+  const downloadBtn = el('download');
+  if (downloadBtn) {
+    downloadBtnhipSent', 'Send error', 'warn');
   }
 });
 
@@ -114,13 +137,16 @@ el('download').addEventListener('click', () => {
   const html = window.__lastBuiltHTML;
   const subject = window.__lastBuiltSubject || 'Newsletter';
   if (!html) { toast('Nothing to download. Build first.', 'warn'); return; }
-  const blob = new Blob([html], { type: 'text/html' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `${subject.replace(/[^a-z0-9\-_]+/gi,'_')}.html`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-});
+      a.download = `${subject.replace(/[^a-z0-9\-_]+/gi,'_')}.html`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  // Publish (WordPress) — relies on backend env + local generated HTML files
+  const publishBtn = el('publish');
+  if (publishBtn) {
+    publishBtn
 
 // Publish (WordPress) — relies on backend env + local generated HTML files
 el('publish').addEventListener('click', async () => {
@@ -142,12 +168,16 @@ el('publish').addEventListener('click', async () => {
         toast('Publish succeeded but no URL returned.', 'info');
       }
     } else {
-      const txt = await resp.text();
-      toast(`Publish response ${resp.status}: ${txt.substring(0,200)}`, 'error');
-    }
-  } catch (e) {
-    toast('Publish error: ' + e.message, 'error');
+      } catch (e) {
+        toast('Publish error: ' + e.message, 'error');
+      }
+    });
   }
+
+  // Poll /status every 5s
+  startPolling();
+});
+
 });
 
 // Poll /status every 5s
@@ -175,8 +205,11 @@ async function pollStatus() {
       const txt = await resp.text();
       setStatus(`Status raw: ${txt.substring(0,120)}`);
     }
-  } catch (e) {
-    // don't spam toast
+
+function startPolling() {
+  setInterval(pollStatus, 5000);
+  pollStatus();
+}spam toast
   }
 }
 setInterval(pollStatus, 5000);
