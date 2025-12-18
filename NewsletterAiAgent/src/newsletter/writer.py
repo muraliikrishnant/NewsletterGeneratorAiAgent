@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Tuple, Optional
 
 from bs4 import BeautifulSoup
 
-from .llm import simple_chat, ChatMessage, OllamaClient
+from .llm import simple_chat, ChatMessage, OllamaClient, generate_with_style
 from .email_client import _sanitize_subject
 
 
@@ -80,7 +80,8 @@ def write_section(topic: str, research_blob: str, force_title: Optional[str] = N
     )
     title_hint = f"Use this exact section title: {force_title}\n\n" if force_title else ""
     user = f"{title_hint}Topic: {topic}\n\nResearch: {research_blob}"
-    resp = simple_chat(system, user)
+    # Use the style-aware generator so the Bartlett+Hormozi voice and examples are applied
+    resp = generate_with_style(user, style_name="bartlett_hormozi")
     return _remove_source_tokens(resp or "")
 
 
@@ -105,7 +106,7 @@ def merge_sections_to_html(title: str, sections: List[str], words_limit: Optiona
             f" Aim for approximately {words_limit} words total (+/-10%). If above target, summarize while preserving facts and citations; if below, expand with concrete, cited details."
         )
     user = f"Title: {title}\n\n" + "\n\n".join(sections)
-    content = simple_chat(system, user)
+    content = generate_with_style(user, style_name="bartlett_hormozi")
     # Best-effort split
     subject = _sanitize_subject(f"{title} — Weekly Newsletter")
     if content.startswith("Subject:"):

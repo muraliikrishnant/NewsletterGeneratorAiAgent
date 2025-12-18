@@ -58,6 +58,43 @@ def simple_chat(system: str, user: str) -> str:
     ])
 
 
+def _load_style_assets(style_name: str = "bartlett_hormozi") -> tuple[str, list]:
+    base = os.path.join(os.path.dirname(__file__), '..', 'style_guides')
+    md_path = os.path.abspath(os.path.join(base, f"{style_name}.md"))
+    json_path = os.path.abspath(os.path.join(os.path.dirname(md_path), '..', 'style_examples', f"{style_name}.json"))
+    guide = ''
+    examples = []
+    try:
+        if os.path.exists(md_path):
+            with open(md_path, 'r', encoding='utf-8') as f:
+                guide = f.read()
+    except Exception:
+        guide = ''
+    try:
+        if os.path.exists(json_path):
+            with open(json_path, 'r', encoding='utf-8') as f:
+                payload = json.load(f)
+                examples = payload.get('examples', []) if isinstance(payload, dict) else []
+    except Exception:
+        examples = []
+    return guide, examples
+
+
+def generate_with_style(task_prompt: str, style_name: str = "bartlett_hormozi") -> str:
+    """Compose a prompt using the selected style guide and few-shot examples and call the default chat provider."""
+    guide, examples = _load_style_assets(style_name)
+    system_parts = [guide] if guide else []
+    # include example prompts in system message to bias the model
+    for ex in examples[:3]:
+        p = ex.get('prompt') if isinstance(ex, dict) else None
+        out = ex.get('output') if isinstance(ex, dict) else None
+        if p and out:
+            system_parts.append(f"Example prompt:\n{p}\nExample output:\n{out}")
+    system = "\n\n".join([s for s in system_parts if s]) or "You are an expert newsletter writer."
+    # call whichever provider is configured
+    return simple_chat(system, task_prompt)
+
+
 # --- Gemini support ---
 _gemini_client_cached = None
 

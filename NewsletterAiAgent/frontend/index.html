@@ -2,33 +2,108 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>TARS Newsletter Builder</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TARS Newsletter Studio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
-    <main>
-      <h1>TARS Newsletter Builder</h1>
-
-      <label for="prompt">Prompt / Research Brief</label>
-      <textarea id="prompt" placeholder="e.g. robotaxi regulatory updates in the US" rows="4"></textarea>
-
-      <div class="row">
-        <label for="words">Target words</label>
-        <input id="words" type="number" value="800" />
+  <body class="bg-slate-50 text-slate-800">
+    <!-- Header -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-8 w-8 rounded-lg bg-indigo-600/90 grid place-items-center text-white font-bold">T</div>
+          <div>
+            <h1 class="text-lg font-semibold">TARS Newsletter Studio</h1>
+            <p class="text-xs text-slate-500">Research-backed newsletter builder with HITL</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <span id="server-indicator" class="inline-flex items-center gap-2 text-xs px-2.5 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+            <span class="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse"></span>
+            API Connected
+          </span>
+          <button id="themeToggle" class="text-slate-600 hover:text-slate-900 text-sm">Toggle Theme</button>
+        </div>
       </div>
+    </header>
 
-      <div class="actions">
-        <button id="build">Build (dry-run)</button>
-        <button id="send">Send + HITL (send draft and wait)</button>
-        <button id="publish">Publish to WordPress (after approval)</button>
+    <!-- Notifications -->
+    <div id="toast" class="fixed top-4 right-4 hidden max-w-sm"></div>
+
+    <!-- Main -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left: Controls -->
+        <section class="lg:col-span-4">
+          <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="p-4 border-b border-slate-200">
+              <h2 class="text-base font-semibold">Builder Controls</h2>
+              <p class="text-xs text-slate-500">Enter a brief, adjust word target, and build a preview.</p>
+            </div>
+            <div class="p-4 space-y-4">
+              <label for="prompt" class="text-sm font-medium">Prompt / Research Brief</label>
+              <textarea id="prompt" rows="6" placeholder="e.g. Robotaxi regulatory updates in Washington, safety debates, and market dynamics" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+
+              <div class="space-y-2">
+                <label class="text-sm font-medium">Target Words</label>
+                <div class="flex items-center gap-3">
+                  <input id="wordsRange" type="range" min="200" max="2000" step="50" value="800" class="flex-1">
+                  <input id="words" type="number" min="200" max="2000" step="50" value="800" class="w-24 rounded-lg border border-slate-300 px-2 py-1 text-sm" />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2 mt-2">
+                <button id="build" class="btn-primary">Build (dry-run)</button>
+                <button id="send" class="btn-secondary">Send + HITL</button>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <button id="download" class="btn-muted" disabled>Download HTML</button>
+                <button id="publish" class="btn-muted">Publish (WordPress)</button>
+              </div>
+
+              <p class="text-[11px] text-slate-500">Send will email a draft and wait for explicit approval via IMAP. Configure SMTP/IMAP and RECIPIENTS in your environment.</p>
+            </div>
+          </div>
+
+          <div class="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="p-4 border-b border-slate-200">
+              <h3 class="text-sm font-semibold">Status</h3>
+              <p class="text-xs text-slate-500">Live HITL status from the backend.</p>
+            </div>
+            <div class="p-4" id="statusPanel">
+              <div id="status" class="text-sm text-slate-700">Idle.</div>
+              <div class="mt-3 text-xs text-slate-500">Polling every 5s.</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Center: Preview -->
+        <section class="lg:col-span-8">
+          <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+              <div>
+                <h2 class="text-base font-semibold">Newsletter Preview</h2>
+                <p id="subject" class="text-xs text-slate-500">Subject will appear here after build.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="chip" id="chipBuilt">Not built</span>
+                <span class="chip" id="chipSent">Not sent</span>
+                <span class="chip" id="chipApproved">Not approved</span>
+              </div>
+            </div>
+            <div class="p-2">
+              <iframe id="preview" class="w-full h-[70vh] rounded-lg border border-slate-200" sandbox="allow-same-origin allow-forms allow-scripts"></iframe>
+            </div>
+          </div>
+        </section>
       </div>
-
-      <section id="status"></section>
-
-      <h2>Preview</h2>
-      <iframe id="preview" sandbox="allow-same-origin allow-forms allow-scripts"></iframe>
     </main>
-    <script src="app.js"></script>
+
+    <script src="app.js" defer></script>
   </body>
-</html>
+  </html>

@@ -1,0 +1,48 @@
+# Project Report: NewsletterAiAgent
+
+## 1. Project Overview
+The **NewsletterAiAgent** is a research-backed newsletter generator that leverages AI to research topics, write content in specific styles, and manage a Human-in-the-Loop (HITL) approval process via email before publishing. It consists of a Python backend (FastAPI), a CLI interface, and a simple web frontend.
+
+## 2. Programming Languages Used
+The project utilizes the following programming languages:
+
+*   **Python (>=3.10)**: The core logic, backend server, and CLI tools are written in Python.
+    *   **Frameworks/Libraries**: FastAPI (API server), Requests (HTTP calls), BeautifulSoup4 (HTML parsing), Google Generative AI (LLM SDK).
+*   **JavaScript (Vanilla)**: Used for the frontend logic (`app.js`) to interact with the backend API.
+*   **HTML5**: Structure for the frontend (`index.html`) and the generated newsletter content.
+*   **CSS3**: Styling for the frontend (`styles.css`) and the newsletter templates.
+
+## 3. Human in the Loop (HITL) Mechanism
+The Human-in-the-Loop system is designed to ensure quality control through an email-based review workflow. Here is how it works:
+
+1.  **Draft Generation & Sending**:
+    *   When a newsletter is generated (via CLI or Frontend), the system sends a **Draft** email to the configured recipients.
+    *   The subject line includes a unique tracking token in the format `[ref:{UUID}]`.
+    *   The system records the state (token, subject, timestamp) in a local file named `hitl_status.json` with the status `"waiting"`.
+
+2.  **Feedback Loop (Polling)**:
+    *   The system actively polls the configured email inbox (via IMAP) for replies containing the specific tracking token.
+    *   **Approval**: If a reply contains keywords like "approved", "looks good", or "go ahead", the system marks the newsletter as **Approved** and sends the final version to the recipients.
+    *   **Revision**: If a reply contains decline keywords like "revise", "change", or "tweak", the system:
+        *   Captures the feedback text.
+        *   Uses the LLM to revise the newsletter content based on the user's feedback.
+        *   Resends the **Revised Draft** with a new token and restarts the waiting process.
+    *   **Feedback Recording**: If the reply is ambiguous, it records the feedback in `hitl_status.json` but continues waiting for explicit approval.
+
+3.  **Timeout**:
+    *   If no reply is received within a configurable timeframe (default defined in settings), the system automatically sends the last version as an **"Unapproved Final"** email and marks the status as `"timeout"`.
+
+## 4. APIs and External Services
+The project integrates with several external APIs and services:
+
+### AI & Research
+*   **Tavily API**: Used for autonomous web research to gather information on the newsletter topic.
+*   **Google Generative AI (Gemini)**: The primary Large Language Model (LLM) used for generating content, summarizing research, and revising drafts based on feedback.
+*   **Ollama (Optional)**: The system also supports local LLM inference via Ollama as an alternative to Gemini.
+
+### Communication
+*   **SMTP (Simple Mail Transfer Protocol)**: Used to send draft and final emails.
+*   **IMAP (Internet Message Access Protocol)**: Used to poll the inbox for user feedback and replies.
+
+### Publishing
+*   **WordPress API**: The frontend includes a "Publish" feature that sends the approved content to a WordPress site (via the `/publish` endpoint).

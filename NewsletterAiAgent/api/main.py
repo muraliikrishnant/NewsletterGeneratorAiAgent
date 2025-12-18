@@ -4,6 +4,7 @@ import os
 import json
 import tempfile
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 
@@ -11,6 +12,16 @@ from newsletter.run import build_newsletter
 from newsletter.hitl import review_loop
 
 app = FastAPI()
+
+# Allow local development frontend (http://localhost:3000) to make requests.
+# In production, set a stricter set of allowed origins.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class BuildReq(BaseModel):

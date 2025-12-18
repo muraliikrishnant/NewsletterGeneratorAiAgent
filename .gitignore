@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+.DS_Store
+*.pyc
+.env
+NewsletterAiAgent/src/newsletter.egg-info/
+hitl_status.json
+*.log
+draft_run_output.html
+generated_from_prompt.html
+.env
+
+# macOS
+.DS_Store
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# packaging
+*.egg-info/
+
+# generated artifacts
+*.html
+
