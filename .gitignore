@@ -6,8 +6,6 @@ __pycache__/
 NewsletterAiAgent/src/newsletter.egg-info/
 hitl_status.json
 *.log
-draft_run_output.html
-generated_from_prompt.html
 
 # macOS
 **/.DS_Store
@@ -18,8 +16,12 @@ generated_from_prompt.html
 # packaging
 *.egg-info/
 
-# generated artifacts
+# generated artifacts (but allow docs/ HTML for GitHub Pages)
+draft_run_output.html
+generated_from_prompt.html
 *.html
+!docs/**/*.html
+!NewsletterAiAgent/docs/**/*.html
 
 # Project specific sensitive/large files
 *.pdf
