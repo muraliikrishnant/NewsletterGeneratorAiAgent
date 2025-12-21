@@ -23,14 +23,12 @@ class Settings:
 
     # Gemini
     gemini_api_key: str | None = os.getenv("GEMINI_API_KEY")
-    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 
     # Research (Tavily)
     tavily_api_key: str | None = os.getenv("TAVILY_API_KEY")
 
     # Email
-    email_provider: str = os.getenv("EMAIL_PROVIDER", "smtp")  # 'smtp' or 'sendgrid'
-    sendgrid_api_key: str | None = os.getenv("SENDGRID_API_KEY")
     smtp_host: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
     smtp_username: str | None = os.getenv("SMTP_USERNAME")
