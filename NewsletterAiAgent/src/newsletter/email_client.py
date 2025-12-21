@@ -15,6 +15,12 @@ from typing import List, Optional, Tuple
 from .config import settings
 
 
+def validate_email_settings():
+    if not (settings.smtp_username and settings.smtp_password and settings.from_email):
+        raise RuntimeError("SMTP credentials or FROM_EMAIL missing. Configure .env")
+    if not (settings.imap_username and settings.imap_password):
+        raise RuntimeError("IMAP credentials missing. Configure .env")
+
 @dataclass
 class EmailMessage:
     subject: str
