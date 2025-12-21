@@ -5,7 +5,7 @@ An end-to-end Python project that builds a research-backed business newsletter u
 ## What it does
 - Takes a prompt/brief
 - Uses Tavily for initial research and topic deep-dives (with raw content + images)
-- Uses Ollama LLM to plan title + topics, write three sections, and merge to an HTML email
+- Uses Gemini LLM to plan title + topics, write three sections, and merge to an HTML email
 - Adds image links to the email body
 - Sends a draft email to reviewers and waits for feedback
 - If approved → sends final. If declined → revises with LLM and loops (max N times)
