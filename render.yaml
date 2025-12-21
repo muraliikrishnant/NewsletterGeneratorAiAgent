@@ -39,3 +39,11 @@ services:
       - key: HITL_TIMEOUT_MINUTES
         value: 10
     healthCheckPath: /status
+
+  - type: static
+    name: newsletter-ai-frontend
+    repo: https://github.com/muraliikrishnant/NewsletterAIAgent_Tars
+    branch: main
+    buildCommand: ""
+    publishPath: NewsletterAiAgent/frontend
+    plan: free
