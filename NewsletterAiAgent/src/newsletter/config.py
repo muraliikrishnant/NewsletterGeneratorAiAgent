@@ -29,6 +29,8 @@ class Settings:
     tavily_api_key: str | None = os.getenv("TAVILY_API_KEY")
 
     # Email
+    email_provider: str = os.getenv("EMAIL_PROVIDER", "smtp")  # 'smtp' or 'sendgrid'
+    sendgrid_api_key: str | None = os.getenv("SENDGRID_API_KEY")
     smtp_host: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
     smtp_username: str | None = os.getenv("SMTP_USERNAME")

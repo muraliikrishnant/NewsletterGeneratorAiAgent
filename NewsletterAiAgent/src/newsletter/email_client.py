@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List, Optional, Tuple
+import requests
 
 from .config import settings
 
@@ -42,16 +43,19 @@ def _smtp_client() -> smtplib.SMTP:
     if not (settings.smtp_username and settings.smtp_password and settings.from_email):
         raise RuntimeError("SMTP credentials or FROM_EMAIL missing. Configure .env")
     
-    # If using port 465, use implicit SSL
-    if settings.smtp_port == 465:
-        server = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port)
-    else:
-        # Default (587 or 25), use STARTTLS
-        server = smtplib.SMTP(settings.smtp_host, settings.smtp_port)
-        server.starttls()
-    
-    server.login(settings.smtp_username, settings.smtp_password)
-    return server
+    try:
+        # If using port 465, use implicit SSL
+        if settings.smtp_port == 465:
+            server = smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=30)
+        else:
+            # Default (587 or 25), use STARTTLS
+            server = smtplib.SMTP(settings.smtp_host, settings.smtp_port, timeout=30)
+            server.starttls()
+        
+        server.login(settings.smtp_username, settings.smtp_password)
+        return server
+    except (OSError, smtplib.SMTPException) as e:
+        raise RuntimeError(f"Failed to connect to SMTP server {settings.smtp_host}:{settings.smtp_port}. Error: {str(e)}. If you're on Render, SMTP ports may be blocked - consider using SendGrid API instead.") from e
 
 
 def _imap_client() -> imaplib.IMAP4_SSL:
@@ -62,20 +66,68 @@ def _imap_client() -> imaplib.IMAP4_SSL:
     return m
 
 
+def _send_via_sendgrid(subject: str, html_body: str, recipients: List[str]) -> None:
+    """Send email via SendGrid API (works on Render and other cloud platforms)"""
+    if not settings.sendgrid_api_key:
+        raise RuntimeError("SENDGRID_API_KEY missing. Configure .env or use EMAIL_PROVIDER=smtp")
+    
+    if not settings.from_email:
+        raise RuntimeError("FROM_EMAIL missing. Configure .env")
+    
+    payload = {
+        "personalizations": [
+            {
+                "to": [{"email": email} for email in recipients],
+                "subject": subject
+            }
+        ],
+        "from": {
+            "email": settings.from_email,
+            "name": settings.from_name
+        },
+        "content": [
+            {
+                "type": "text/html",
+                "value": html_body
+            }
+        ]
+    }
+    
+    headers = {
+        "Authorization": f"Bearer {settings.sendgrid_api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    response = requests.post(
+        "https://api.sendgrid.com/v3/mail/send",
+        json=payload,
+        headers=headers,
+        timeout=30
+    )
+    
+    if response.status_code not in (200, 202):
+        raise RuntimeError(f"SendGrid API error: {response.status_code} - {response.text}")
+
+
 def send_email(subject: str, html_body: str, recipients: List[str], token: Optional[str] = None) -> str:
     token = token or str(uuid.uuid4())
     clean_subj = _sanitize_subject(subject)
     subject_with_token = f"{clean_subj} [ref:{token}]"
 
-    msg = MIMEMultipart('alternative')
-    msg['From'] = f"{settings.from_name} <{settings.from_email}>"
-    msg['To'] = ", ".join(recipients)
-    msg['Subject'] = subject_with_token
+    # Use SendGrid if configured, otherwise fall back to SMTP
+    if settings.email_provider == "sendgrid":
+        _send_via_sendgrid(subject_with_token, html_body, recipients)
+    else:
+        # SMTP method
+        msg = MIMEMultipart('alternative')
+        msg['From'] = f"{settings.from_name} <{settings.from_email}>"
+        msg['To'] = ", ".join(recipients)
+        msg['Subject'] = subject_with_token
 
-    msg.attach(MIMEText(html_body, 'html'))
+        msg.attach(MIMEText(html_body, 'html'))
 
-    with _smtp_client() as server:
-        server.sendmail(settings.from_email, recipients, msg.as_string())
+        with _smtp_client() as server:
+            server.sendmail(settings.from_email, recipients, msg.as_string())
 
     return token
 
