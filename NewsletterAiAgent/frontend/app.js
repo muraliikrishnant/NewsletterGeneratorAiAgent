@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ prompt, words })
         });
         const ct = resp.headers.get('content-type') || '';
-        if (ct.includes('application/json')) {
+        if (resp.ok && ct.includes('application/json')) {
           const data = await resp.json();
           const subEl = el('subject');
           if (subEl) subEl.textContent = data.subject || 'Newsletter';
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
           toast('Draft sent for HITL review.', 'success');
         } else {
           const txt = await resp.text();
-          toast(`Send returned ${resp.status}: ${txt.substring(0, 200)}`, 'error');
+          toast(`Send failed ${resp.status}: ${txt.substring(0, 200)}`, 'error');
           setChip('chipSent', 'Send error', 'warn');
         }
       } catch (e) {
