@@ -3,6 +3,7 @@ __pycache__/
 .DS_Store
 *.pyc
 .env
+**/.env
 NewsletterAiAgent/src/newsletter.egg-info/
 hitl_status.json
 *.log
