@@ -60,6 +60,16 @@ class SendReq(BaseModel):
     words: Optional[int] = None
 
 
+def clean_subject(subject: str) -> str:
+    """Remove markdown backticks and 'json' prefix if LLM includes them."""
+    s = subject.strip()
+    if s.startswith("```"):
+        s = s.strip("`").strip()
+        if s.lower().startswith("json"):
+            s = s[4:].strip()
+    return s.split('\n')[0].strip()
+
+
 class PublishReq(BaseModel):
     token: str
 
@@ -181,7 +191,7 @@ def diag_config():
 def build(req: BuildReq):
     try:
         subject, html = build_newsletter(req.prompt, words_limit=req.words)
-        return {'subject': subject, 'html': html}
+        return {'subject': clean_subject(subject), 'html': html}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -198,7 +208,7 @@ def send(req: SendReq):
         status_path = os.path.join(os.getcwd(), 'hitl_status.json')
         data = {
             'status': 'waiting_approval',
-            'subject': subject,
+            'subject': clean_subject(subject),
             'html': html,
             'recipients': recipients,
             'updated_at': time.time(),
@@ -270,7 +280,7 @@ def revise(req: ReviseReq):
         revised_subject, revised_html = revise_with_feedback(current_html, req.feedback)
         
         # 3. Update hitl_status.json
-        data['subject'] = revised_subject or data['subject']
+        data['subject'] = clean_subject(revised_subject) if revised_subject else data['subject']
         data['html'] = revised_html
         data['status'] = 'waiting_approval'
         data['feedback'] = req.feedback

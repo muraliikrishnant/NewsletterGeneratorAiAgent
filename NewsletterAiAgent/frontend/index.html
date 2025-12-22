@@ -57,8 +57,8 @@
               </div>
 
               <div class="grid grid-cols-2 gap-2 mt-2">
-                <button id="build" class="btn-primary">Build (dry-run)</button>
-                <button id="send" class="btn-secondary">Send + HITL</button>
+                <button id="build" class="btn-primary">Generate Newsletter (Dry-run)</button>
+                <button id="send" class="btn-secondary">Generate + HITL</button>
               </div>
 
               <div class="grid grid-cols-2 gap-2">
@@ -66,44 +66,40 @@
                 <button id="publish" class="btn-muted">Publish (WordPress)</button>
               </div>
 
-              <p class="text-[11px] text-slate-500">Send will generate a draft and wait for your approval here. No SMTP is required for the draft phase.</p>
+              <div class="space-y-1">
+                 <label for="backendUrl" class="text-xs font-medium text-slate-500">Backend URL</label>
+                 <input id="backendUrl" type="text" placeholder="https://newsletteraiagent.onrender.com" class="w-full rounded-lg border border-slate-200 px-3 py-1.5 text-[11px] focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                 <p class="text-[10px] text-slate-400">Update this with your live Render URL if necessary.</p>
+              </div>
+
+              <p class="text-[11px] text-slate-500">Drafts are stored on the server for your review below. Emails are only sent upon approval.</p>
             </div>
           </div>
 
           <div class="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm">
             <div class="p-4 border-b border-slate-200">
-              <h3 class="text-sm font-semibold">Status</h3>
-              <p class="text-xs text-slate-500">Live HITL status from the backend.</p>
+              <h3 class="text-sm font-semibold">System Status</h3>
+              <p class="text-xs text-slate-500">Backend connectivity and process status.</p>
             </div>
             <div class="p-4" id="statusPanel">
               <div id="statusDetails">
                 <div id="status" class="text-sm text-slate-700">Idle.</div>
               </div>
-              
-              <!-- HITL Controls (Hidden by default) -->
-              <div id="hitlControls" class="hidden mt-4 space-y-4 pt-4 border-t border-slate-100">
-                <div>
-                  <label for="feedback" class="text-sm font-medium">Revision Feedback</label>
-                  <textarea id="feedback" rows="3" placeholder="e.g. Make the tone more professional..." class="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <button id="reviseBtn" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium py-2 rounded-lg text-sm transition-colors border border-indigo-200">Revise</button>
-                  <button id="approveBtn" class="bg-indigo-600 text-white hover:bg-indigo-700 font-medium py-2 rounded-lg text-sm transition-colors shadow-sm">Approve & Send</button>
-                </div>
-              </div>
-
-              <div class="mt-3 text-xs text-slate-500">Status polls every 5s.</div>
+              <div class="mt-3 text-xs text-slate-500">Polling every 5s.</div>
             </div>
           </div>
         </section>
 
-        <!-- Center: Preview -->
-        <section class="lg:col-span-8">
-          <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+        <!-- Center/Right: Preview & HITL -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+          <div class="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
               <div>
                 <h2 class="text-base font-semibold">Newsletter Preview</h2>
-                <p id="subject" class="text-xs text-slate-500">Subject will appear here after build.</p>
+                <div id="subjectContainer" class="flex items-center gap-2 mt-0.5">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Subject:</span>
+                  <p id="subject" class="text-xs text-slate-600 font-medium">Ready to build...</p>
+                </div>
               </div>
               <div class="flex items-center gap-2">
                 <span class="chip" id="chipBuilt">Not built</span>
@@ -112,9 +108,55 @@
               </div>
             </div>
             <div class="p-2">
-              <iframe id="preview" class="w-full h-[70vh] rounded-lg border border-slate-200" sandbox="allow-same-origin allow-forms allow-scripts"></iframe>
+              <iframe id="preview" class="w-full h-[65vh] rounded-lg border border-slate-200 bg-white" sandbox="allow-same-origin allow-forms allow-scripts"></iframe>
             </div>
           </div>
+
+          <!-- HITL BOX: Integrated below the newsletter -->
+          <div id="hitlBox" class="hidden rounded-xl border-2 border-indigo-100 bg-indigo-50/30 shadow-sm p-6">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="h-10 w-10 rounded-full bg-indigo-600 text-white grid place-items-center shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-indigo-900">Human-in-the-Loop Review</h3>
+                <p class="text-sm text-indigo-700/80">Provide feedback for revision or approve for final delivery.</p>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="relative">
+                <label for="feedback" class="sr-only">Your Feedback</label>
+                <textarea id="feedback" rows="4" placeholder="e.g. Can you make the opening more punchy and add a section about global regulatory trends?" class="w-full rounded-xl border-indigo-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-inner"></textarea>
+              </div>
+              
+              <div class="flex flex-col sm:flex-row gap-3">
+                <button id="reviseBtn" class="flex-1 bg-white border border-indigo-200 text-indigo-700 hover:bg-white/80 font-semibold py-3 px-6 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 group">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 group-hover:rotate-[-45deg] transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Request Revision
+                </button>
+                <button id="approveBtn" class="flex-[1.5] bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] font-bold py-3 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Approve & Send Final Email
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <footer class="mt-2 py-6 border-t border-slate-200 flex flex-col items-center justify-center gap-2">
+            <p class="text-sm font-medium text-slate-500">Built with <span class="text-indigo-600 font-bold">NewsletterAiAgent</span></p>
+            <div class="flex items-center gap-4">
+              <a href="#" class="text-xs text-slate-400 hover:text-indigo-500 transition-colors underline decoration-slate-200 underline-offset-4">View Source</a>
+              <span class="h-1 w-1 rounded-full bg-slate-200"></span>
+              <a href="#" class="text-xs text-slate-400 hover:text-indigo-500 transition-colors underline decoration-slate-200 underline-offset-4">Documentation</a>
+            </div>
+          </footer>
         </section>
       </div>
     </main>
