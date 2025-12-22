@@ -10,8 +10,8 @@ from pydantic import BaseModel
 from typing import Optional
 
 from newsletter.run import build_newsletter
-from newsletter.hitl import review_loop
-from newsletter.email_client import validate_email_settings
+from newsletter.writer import revise_with_feedback
+from newsletter.email_client import validate_email_settings, send_email
 
 app = FastAPI()
 
@@ -62,6 +62,10 @@ class SendReq(BaseModel):
 
 class PublishReq(BaseModel):
     token: str
+
+
+class ReviseReq(BaseModel):
+    feedback: str
 
 
 def _review_loop_background(subject: str, html: str, recipients: list[str]):
@@ -183,25 +187,107 @@ def build(req: BuildReq):
 
 
 @app.post('/send')
-def send(req: SendReq, background_tasks: BackgroundTasks):
+def send(req: SendReq):
     try:
-        # Fail fast if SMTP is not configured so the frontend sees an error instead of a silent background failure
-        validate_email_settings()
-
-        # 1. Generate the newsletter logic synchronously to catch basic errors immediately
+        # 1. Generate the newsletter logic synchronously
         subject, html = build_newsletter(req.prompt, words_limit=req.words)
         
-        # 2. Start the Blocking HITL review loop in the background
+        # 2. Save draft to hitl_status.json for frontend approval
         recipients = os.getenv('RECIPIENTS', '').split(',') if os.getenv('RECIPIENTS') else [os.getenv('SMTP_USERNAME')]
         
-        background_tasks.add_task(_review_loop_background, subject, html, recipients)
-        
-        # 3. Return immediate success so frontend doesn't timeout
-        return {
-            'status': 'background_process_started',
+        status_path = os.path.join(os.getcwd(), 'hitl_status.json')
+        data = {
+            'status': 'waiting_approval',
             'subject': subject,
             'html': html,
-            'message': 'Review loop started in background. Check your email.'
+            'recipients': recipients,
+            'updated_at': time.time(),
+        }
+        with open(status_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+            
+        # Also save to the html files used by /publish
+        with open(os.path.join(os.getcwd(), 'generated_from_prompt.html'), 'w', encoding='utf-8') as f:
+            f.write(html)
+        
+        # 3. Return immediate success
+        return {
+            'status': 'waiting_approval',
+            'subject': subject,
+            'html': html,
+            'message': 'Draft generated and waiting for frontend approval.'
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post('/approve')
+def approve():
+    try:
+        # 1. Load the draft from hitl_status.json
+        status_path = os.path.join(os.getcwd(), 'hitl_status.json')
+        if not os.path.exists(status_path):
+            raise HTTPException(status_code=404, detail="No draft found to approve.")
+            
+        with open(status_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        if data.get('status') != 'waiting_approval':
+             raise HTTPException(status_code=400, detail=f"Cannot approve in status: {data.get('status')}")
+
+        # 2. Send the final email
+        validate_email_settings()
+        subject = data['subject']
+        html = data['html']
+        recipients = data['recipients']
+        
+        send_email(subject, html, recipients)
+        
+        # 3. Update status to approved
+        data['status'] = 'approved'
+        data['updated_at'] = time.time()
+        with open(status_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+            
+        return {"status": "approved", "message": "Final email sent successfully."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post('/revise')
+def revise(req: ReviseReq):
+    try:
+        # 1. Load the current draft
+        status_path = os.path.join(os.getcwd(), 'hitl_status.json')
+        if not os.path.exists(status_path):
+            raise HTTPException(status_code=404, detail="No draft found to revise.")
+            
+        with open(status_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            
+        # 2. Revise with feedback
+        current_html = data['html']
+        revised_subject, revised_html = revise_with_feedback(current_html, req.feedback)
+        
+        # 3. Update hitl_status.json
+        data['subject'] = revised_subject or data['subject']
+        data['html'] = revised_html
+        data['status'] = 'waiting_approval'
+        data['feedback'] = req.feedback
+        data['updated_at'] = time.time()
+        
+        with open(status_path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2)
+            
+        # Update html file
+        with open(os.path.join(os.getcwd(), 'generated_from_prompt.html'), 'w', encoding='utf-8') as f:
+            f.write(revised_html)
+            
+        return {
+            'status': 'waiting_approval',
+            'subject': data['subject'],
+            'html': data['html'],
+            'message': 'Draft revised and waiting for frontend approval.'
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

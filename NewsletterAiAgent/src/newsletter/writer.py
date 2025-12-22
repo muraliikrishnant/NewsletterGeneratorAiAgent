@@ -94,7 +94,7 @@ def merge_sections_to_html(title: str, sections: List[str], words_limit: Optiona
         "Structure (HTML only):\n"
         "1) <p> Introduction that frames all topics and their relevance; reference today’s date: "
         f"{today}.\n"
-    "2) For each provided section: <h2> Use the given title when present; edited <p> content; inline clickable citations using <a href=\"https://...\">Link</a>. Include <img src=\"...\" width=\"600\"> if appropriate.\n"
+    "2) For each provided section: <h2> Use the given title when present; edited <p> content; NO inline clickable citations. Never give me clickable inline citations using <a href=\"https://...\">Link</a>. Include <img src=\"...\" width=\"600\"> if appropriate.\n"
     "Important: Do NOT output the word 'Source' or 'Sources' anywhere in the text; if you would otherwise include it, omit it.\n"
         "3) <h3>Sources</h3><ul> consolidated list, deduplicated, alphabetized by Publication Name.\n"
         "4) <p> Conclusion tying threads together with implications or next steps.\n"

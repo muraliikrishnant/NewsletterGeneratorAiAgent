@@ -66,7 +66,7 @@
                 <button id="publish" class="btn-muted">Publish (WordPress)</button>
               </div>
 
-              <p class="text-[11px] text-slate-500">Send will email a draft and wait for explicit approval via IMAP. Configure SMTP/IMAP and RECIPIENTS in your environment.</p>
+              <p class="text-[11px] text-slate-500">Send will generate a draft and wait for your approval here. No SMTP is required for the draft phase.</p>
             </div>
           </div>
 
@@ -76,8 +76,23 @@
               <p class="text-xs text-slate-500">Live HITL status from the backend.</p>
             </div>
             <div class="p-4" id="statusPanel">
-              <div id="status" class="text-sm text-slate-700">Idle.</div>
-              <div class="mt-3 text-xs text-slate-500">Polling every 5s.</div>
+              <div id="statusDetails">
+                <div id="status" class="text-sm text-slate-700">Idle.</div>
+              </div>
+              
+              <!-- HITL Controls (Hidden by default) -->
+              <div id="hitlControls" class="hidden mt-4 space-y-4 pt-4 border-t border-slate-100">
+                <div>
+                  <label for="feedback" class="text-sm font-medium">Revision Feedback</label>
+                  <textarea id="feedback" rows="3" placeholder="e.g. Make the tone more professional..." class="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <button id="reviseBtn" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium py-2 rounded-lg text-sm transition-colors border border-indigo-200">Revise</button>
+                  <button id="approveBtn" class="bg-indigo-600 text-white hover:bg-indigo-700 font-medium py-2 rounded-lg text-sm transition-colors shadow-sm">Approve & Send</button>
+                </div>
+              </div>
+
+              <div class="mt-3 text-xs text-slate-500">Status polls every 5s.</div>
             </div>
           </div>
         </section>
@@ -106,4 +121,4 @@
 
     <script src="app.js" defer></script>
   </body>
-  </html>
+</html>
