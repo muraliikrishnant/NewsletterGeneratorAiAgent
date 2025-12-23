@@ -1,3 +1,4 @@
+// VERSION: 2.0.2 - FRONTEND HITL ENABLED
 // Sophisticated frontend logic for Newsletter Studio
 const el = id => document.getElementById(id);
 
@@ -7,7 +8,7 @@ function getApiBase() {
   if (customUrl) return customUrl.replace(/\/$/, ""); 
   
   if (window.location.hostname.includes('github.io') || window.location.hostname.includes('onrender.com')) {
-    return 'https://newsletteraiagent-tars.onrender.com';
+    return 'https://newsletteraiagent.onrender.com';
   }
   return window.API_BASE || 'http://127.0.0.1:8000';
 }
@@ -16,7 +17,7 @@ function getApiBase() {
 function toast(message, type = 'info') {
   const t = el('toast');
   if (!t) return;
-  t.innerHTML = \`<div class="card \${type} p-4 shadow-xl border-l-4 \${type === 'error' ? 'border-red-500 bg-red-50' : type === 'success' ? 'border-green-500 bg-green-50' : 'border-indigo-500 bg-indigo-50'} rounded-lg animate-in slide-in-from-right"><div class="text-sm font-medium \${type === 'error' ? 'text-red-800' : type === 'success' ? 'text-green-800' : 'text-indigo-800'}">\${message}</div></div>\`;
+  t.innerHTML = `<div class="card ${type} p-4 shadow-xl border-l-4 ${type === 'error' ? 'border-red-500 bg-red-50' : type === 'success' ? 'border-green-500 bg-green-50' : 'border-indigo-500 bg-indigo-50'} rounded-lg animate-in slide-in-from-right"><div class="text-sm font-medium ${type === 'error' ? 'text-red-800' : type === 'success' ? 'text-green-800' : 'text-indigo-800'}">${message}</div></div>`;
   t.classList.remove('hidden');
   setTimeout(() => t.classList.add('hidden'), 5000);
 }
@@ -25,7 +26,7 @@ function setChip(id, text, variant = 'info') {
   const c = el(id);
   if (!c) return;
   c.textContent = text;
-  c.className = \`chip \${variant}\`;
+  c.className = `chip ${variant}`;
 }
 
 function setStatus(text) {
@@ -85,14 +86,14 @@ document.addEventListener('DOMContentLoaded', () => {
       setStatus('Generating initial newsletter... Please wait.');
       setChip('chipBuilt', 'Building…', 'info');
       try {
-        const resp = await fetch(\`\${getApiBase()}/build\`, {
+        const resp = await fetch(`${getApiBase()}/build`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, words })
         });
         if (!resp.ok) {
           const txt = await resp.text();
-          throw new Error(\`Build failed (\${resp.status}): \${txt.substring(0, 100)}\`);
+          throw new Error(`Build failed (${resp.status}): ${txt.substring(0, 100)}`);
         }
         const data = await resp.json();
         if (subEl) subEl.textContent = data.subject || 'Newsletter';
@@ -120,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
       setStatus('Starting Human-in-the-Loop process...');
       setChip('chipSent', 'Starting…', 'info');
       try {
-        const resp = await fetch(\`\${getApiBase()}/send\`, {
+        const resp = await fetch(`${getApiBase()}/send`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt, words })
@@ -146,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     approveBtn.addEventListener('click', async () => {
       setStatus('Finalizing and sending email...');
       try {
-        const resp = await fetch(\`\${getApiBase()}/approve\`, { method: 'POST' });
+        const resp = await fetch(`${getApiBase()}/approve`, { method: 'POST' });
         if (!resp.ok) throw new Error('Final approval failed.');
         toast('Approved! Final draft sent to your email.', 'success');
         setStatus('Process Complete. Final Email Sent.');
@@ -169,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       setStatus('AI is revising the newsletter based on your feedback...');
       try {
-        const resp = await fetch(\`\${getApiBase()}/revise\`, {
+        const resp = await fetch(`${getApiBase()}/revise`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ feedback })
@@ -195,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function pollStatus() {
   try {
-    const resp = await fetch(\`\${getApiBase()}/status\`, { method: 'GET' });
+    const resp = await fetch(`${getApiBase()}/status`, { method: 'GET' });
     if (!resp.ok) return;
     const s = await resp.json();
     const txt = s.status || 'none';
@@ -211,15 +212,15 @@ async function pollStatus() {
 
     const details = el('statusDetails');
     if (details) {
-      details.innerHTML = \`
+      details.innerHTML = `
         <div class="space-y-2">
             <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-500">Current Phase:</span>
-                <span class="font-bold \${txt === 'waiting_approval' ? 'text-indigo-600' : 'text-slate-700'} uppercase tracking-tighter shadow-sm bg-slate-100 px-2 py-0.5 rounded">\${txt.replace('_', ' ')}</span>
+                <span class="font-bold ${txt === 'waiting_approval' ? 'text-indigo-600' : 'text-slate-700'} uppercase tracking-tighter shadow-sm bg-slate-100 px-2 py-0.5 rounded">${txt.replace('_', ' ')}</span>
             </div>
-            \${s.updated_at ? \`<div class="text-[10px] text-slate-400 text-right">Updated: \${new Date(s.updated_at * 1000).toLocaleTimeString()}</div>\` : ''}
+            ${s.updated_at ? `<div class="text-[10px] text-slate-400 text-right">Updated: ${new Date(s.updated_at * 1000).toLocaleTimeString()}</div>` : ''}
         </div>
-      \`;
+      `;
     }
 
     // Show/Hide HITL Box
