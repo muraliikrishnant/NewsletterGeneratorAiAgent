@@ -71,9 +71,10 @@ cp .env.example .env
 If you want free local images, run a local AUTOMATIC1111 Stable Diffusion WebUI and set:
 - `IMAGE_PROVIDER=auto1111`
 - `AUTO1111_URL=http://127.0.0.1:7860`
+- `IMAGE_BASE_URL=http://your-backend-host:8000` (must be reachable by email clients)
 - Optional: `IMAGE_COUNT`, `IMAGE_WIDTH`, `IMAGE_HEIGHT`, `IMAGE_STEPS`, `IMAGE_CFG_SCALE`, `IMAGE_SAMPLER`
 
-Generated images are embedded as data-URIs for preview; some email clients may block them.
+Generated images are hosted by the API at `/images/*` for reliable email rendering.
 
 ## Run it
 ```

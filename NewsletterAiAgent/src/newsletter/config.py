@@ -34,6 +34,8 @@ class Settings:
     # Local image generation (optional)
     image_provider: str = os.getenv("IMAGE_PROVIDER", "tavily")  # 'tavily' or 'auto1111'
     auto1111_url: str = os.getenv("AUTO1111_URL", "http://127.0.0.1:7860")
+    image_base_url: str | None = os.getenv("IMAGE_BASE_URL")
+    image_storage_dir: str = os.getenv("IMAGE_STORAGE_DIR", "generated_images")
     image_count: int = int(os.getenv("IMAGE_COUNT", "2"))
     image_width: int = int(os.getenv("IMAGE_WIDTH", "768"))
     image_height: int = int(os.getenv("IMAGE_HEIGHT", "512"))

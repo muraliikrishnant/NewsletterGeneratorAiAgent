@@ -17,20 +17,22 @@ from .email_client import send_email
 from bs4 import BeautifulSoup
 
 
-def _normalize_words_limit(words_limit: int | None) -> int | None:
+def _validate_words_limit(words_limit: int | None) -> int | None:
     if words_limit is None:
         return None
     try:
         value = int(words_limit)
     except Exception:
-        return None
+        raise ValueError("Words must be an integer.")
     min_w = max(0, settings.min_words)
     max_w = max(min_w, settings.max_words)
-    return max(min_w, min(max_w, value))
+    if value < min_w or value > max_w:
+        raise ValueError(f"Words must be between {min_w} and {max_w}.")
+    return value
 
 
 def build_newsletter(prompt: str, words_limit: int | None = None) -> tuple[str, str]:
-    words_limit = _normalize_words_limit(words_limit)
+    words_limit = _validate_words_limit(words_limit)
     # Initial research
     init = initial_research(prompt)
     articles_blob = json.dumps(init, indent=2)

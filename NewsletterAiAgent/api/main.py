@@ -6,6 +6,7 @@ import tempfile
 import time
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import Optional
 
@@ -55,6 +56,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Serve generated images for email-friendly hosting
+os.makedirs(settings.image_storage_dir, exist_ok=True)
+app.mount("/images", StaticFiles(directory=settings.image_storage_dir), name="images")
 
 
 class BuildReq(BaseModel):
@@ -199,6 +204,8 @@ def build(req: BuildReq):
     try:
         subject, html = build_newsletter(req.prompt, words_limit=req.words)
         return {'subject': clean_subject(subject), 'html': html}
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -234,6 +241,8 @@ def send(req: SendReq):
             'html': html,
             'message': 'Draft generated and waiting for frontend approval.'
         }
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import base64
+import os
+import time
 from typing import List
 
 import requests
@@ -8,12 +10,29 @@ import requests
 from .config import settings
 
 
-def generate_images(prompt: str, n: int | None = None) -> List[str]:
-    """Generate images via local AUTOMATIC1111 WebUI and return data-URI strings.
+def _ensure_storage_dir() -> str:
+    path = settings.image_storage_dir
+    os.makedirs(path, exist_ok=True)
+    return path
 
-    Note: data-URI images render in the preview but may be blocked by some email clients.
-    """
+
+def _write_image(b64: str) -> str:
+    folder = _ensure_storage_dir()
+    ts = int(time.time() * 1000)
+    name = f"img_{ts}.png"
+    filepath = os.path.join(folder, name)
+    raw = base64.b64decode(b64)
+    with open(filepath, "wb") as f:
+        f.write(raw)
+    return name
+
+
+def generate_images(prompt: str, n: int | None = None) -> List[str]:
+    """Generate images via local AUTOMATIC1111 WebUI and return hosted URLs."""
     if settings.image_provider.lower() != "auto1111":
+        return []
+    if not settings.image_base_url:
+        # Without a public base URL, email clients won't be able to render the images.
         return []
 
     count = n or max(1, settings.image_count)
@@ -38,7 +57,6 @@ def generate_images(prompt: str, n: int | None = None) -> List[str]:
     for b64 in images:
         if not isinstance(b64, str):
             continue
-        # some A1111 configs return base64 without data-uri header
-        # add a PNG data-uri prefix
-        out.append("data:image/png;base64," + b64.strip())
+        filename = _write_image(b64.strip())
+        out.append(settings.image_base_url.rstrip("/") + f"/images/{filename}")
     return out
