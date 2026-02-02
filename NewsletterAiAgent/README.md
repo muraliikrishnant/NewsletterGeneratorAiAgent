@@ -57,6 +57,12 @@ cp .env.example .env
 	- `GEMINI_MODEL=gemini-flash-latest` (or another)
 - You can switch back anytime by setting `LLM_PROVIDER=ollama`.
 
+### Style controls (Bartlett + Hormozi-inspired)
+- `STYLE_NAME=bartlett_hormozi` (default)
+- `STYLE_EXAMPLES_COUNT=3` (how many few-shot examples to include)
+- `VOICE_POLISH=true` (adds a final voice pass)
+- `VOICE_POLISH_PASSES=1` (increase if you want stronger voice lock-in)
+
 ## Run it
 ```
 python -m newsletter.run "Write a newsletter about AI agents in business ops"
@@ -88,6 +94,7 @@ This will:
 - Ollama tool-calling for live browsing is not used here; instead, we use Tavily for research. This keeps the model local and predictable.
 - For images, we insert up to 3 top image links at the top of the email for inbox compatibility; full inline image embedding could be added with attachments or hosted URLs.
 - Gmail requires App Passwords when 2FA is on. Ensure IMAP is enabled in Gmail settings.
+- For fine-tuning scaffolding, see `NewsletterAiAgent/training/README.md`.
 
 ## Project layout
 - `src/newsletter/config.py` – Configuration via env vars

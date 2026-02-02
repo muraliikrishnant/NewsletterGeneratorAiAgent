@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Tuple, Optional
 from bs4 import BeautifulSoup
 
 from .llm import simple_chat, ChatMessage, OllamaClient, generate_with_style
+from .config import settings
 from .email_client import _sanitize_subject
 
 
@@ -64,7 +65,7 @@ def plan_title_and_topics(articles_blob: str) -> Dict[str, Any]:
 
 def write_section(topic: str, research_blob: str, force_title: Optional[str] = None) -> str:
     system = (
-        "You are writing a business newsletter strictly in the blended style of Steven Bartlett and Alex Hormozi. "
+        "You are writing a business newsletter in a style inspired by a blended Steven Bartlett + Alex Hormozi voice. "
         "Tone constraints (must follow):\n"
         "- Bartlett: start with a personal story or reflective hook; emotionally resonant; human, vulnerable.\n"
         "- Hormozi: convert insight into sharp, tactical lessons with numbers, frameworks, and direct language.\n"
@@ -81,7 +82,7 @@ def write_section(topic: str, research_blob: str, force_title: Optional[str] = N
     title_hint = f"Use this exact section title: {force_title}\n\n" if force_title else ""
     user = f"{title_hint}Topic: {topic}\n\nResearch: {research_blob}"
     # Use the style-aware generator so the Bartlett+Hormozi voice and examples are applied
-    resp = generate_with_style(user, style_name="bartlett_hormozi")
+    resp = generate_with_style(user, style_name=settings.style_name)
     return _remove_source_tokens(resp or "")
 
 
@@ -90,7 +91,7 @@ def merge_sections_to_html(title: str, sections: List[str], words_limit: Optiona
     system = (
         "You are an expert newsletter editor. Merge the provided sections into a cohesive, email-ready HTML body with a holistic introduction and conclusion. "
         "Maintain a professional, concise tone for a business audience and preserve intended meaning. Be as detailed as needed to fully cover the topics; avoid fluff. "
-        "Enforce style: blended Steven Bartlett (reflective human hook) + Alex Hormozi (tactical, numbers-first lessons). Keep sentences short; vary rhythm.\n"
+        "Enforce style: inspired blended Steven Bartlett (reflective human hook) + Alex Hormozi (tactical, numbers-first lessons). Keep sentences short; vary rhythm.\n"
         "Structure (HTML only):\n"
         "1) <p> Introduction that frames all topics and their relevance; reference today’s date: "
         f"{today}.\n"
@@ -106,7 +107,7 @@ def merge_sections_to_html(title: str, sections: List[str], words_limit: Optiona
             f" Aim for approximately {words_limit} words total (+/-10%). If above target, summarize while preserving facts and citations; if below, expand with concrete, cited details."
         )
     user = f"Title: {title}\n\n" + "\n\n".join(sections)
-    content = generate_with_style(user, style_name="bartlett_hormozi")
+    content = generate_with_style(user, style_name=settings.style_name)
     # Best-effort split
     subject = _sanitize_subject(f"{title} — Weekly Newsletter")
     if content.startswith("Subject:"):
@@ -142,11 +143,29 @@ def revise_with_feedback(original_email_html: str, feedback: str) -> Tuple[str, 
         "Important: Do NOT include the word 'Source' or 'Sources' anywhere in your reply."
     )
     user = f"Email HTML:\n{original_email_html}\n\nFeedback from human:\n{feedback}"
-    reply = simple_chat(system, user)
+    reply = generate_with_style(f"{system}\n\n{user}", style_name=settings.style_name)
     if "---SUBJECT---" in reply:
         subject, body = reply.split("---SUBJECT---", 1)
         return _remove_source_tokens(subject.strip()), _remove_source_tokens(body.strip())
     return _sanitize_subject("Revised Newsletter"), reply.strip()
+
+
+def voice_polish_html(html_body: str, brief: str, words_limit: Optional[int] = None) -> str:
+    """Rewrite HTML into the target voice while keeping structure and citations intact."""
+    system = (
+        "You are a voice polisher. Rephrase the HTML to match a blended Steven Bartlett + Alex Hormozi-inspired voice. "
+        "Keep HTML tags limited to <h2>, <h3>, <p>, <ul>, <li>, <a>, <img>. "
+        "Do not add or remove sections; keep the same structure and preserve any URLs verbatim. "
+        "Prefer short sentences with occasional longer, flowing lines. Be direct, tactical, and emotionally resonant. "
+        "Ask at least one direct question that forces action. Use contractions. "
+        "Do NOT use the word 'Source' or 'Sources' anywhere. "
+        "Output HTML only."
+    )
+    if words_limit:
+        system += f" Aim for approximately {words_limit} words total (+/-10%)."
+    user = f"Brief:\n{brief}\n\nHTML:\n{html_body}"
+    polished = generate_with_style(f"{system}\n\n{user}", style_name=settings.style_name)
+    return _remove_source_tokens(polished or html_body)
 
 
 def enforce_on_topic_and_length(html_body: str, prompt: str, required_terms: List[str], target_words: Optional[int] = None) -> str:
@@ -179,5 +198,5 @@ def enforce_on_topic_and_length(html_body: str, prompt: str, required_terms: Lis
     user = (
         "User brief:\n" + prompt + "\n\nCurrent HTML body:\n" + html_body + "\n\nInstructions:\n- " + "\n- ".join(instructions)
     )
-    revised = simple_chat(system, user)
+    revised = generate_with_style(f"{system}\n\n{user}", style_name=settings.style_name)
     return revised or html_body

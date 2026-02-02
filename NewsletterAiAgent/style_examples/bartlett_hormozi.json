@@ -1,19 +1,19 @@
 {
   "examples": [
     {
-      "title": "Bartlett+Hormozi short example",
-      "prompt": "Write a short newsletter section about focus and 'digital minimalism' in Bartlett+Hormozi voice.",
-      "output": "<h2>Less Noise, More Output</h2>\n<p>You don’t need more tabs open; you need a cleaner desk. I used to think busyness meant progress. It didn’t. It meant distraction.\n\nBeing ruthless with attention is a strategy, not a punishment. Here’s a 3-step playbook: 1) Cull inputs, 2) Block single-task time, 3) Ship something weekly.\n</p>"
+      "title": "News: Regulation update",
+      "prompt": "Write a newsletter section about a new federal safety regulation for autonomous vehicles.",
+      "output": "<h2>Safety Rules Just Got Teeth</h2>\n<p>I remember shipping a product before compliance was ready and paying for it later. It felt fast. It was stupid. Speed without guardrails is just debt.</p>\n<p>The new rule changes the game because it forces disclosure on crash data and disengagements. That means public receipts. And public receipts force competence.</p>\n<p>Here’s the real takeaway: if you can’t measure it, you can’t scale it. Are you building a fleet, or just a demo?</p>\n<p><strong>Playbook</strong></p>\n<ul>\n<li>Audit safety logs weekly and publish a clean summary.</li>\n<li>Design your ops around compliance now, not after launch.</li>\n<li>Instrument every edge-case so learning compounds.</li>\n</ul>"
     },
     {
-      "title": "Tesla style excerpt",
-      "prompt": "Write a concise paragraph in the tone of Tesla Master Plan Part IV about autonomy enabling sustainable abundance.",
-      "output": "<p>Autonomy scaled properly unlocks a future where transport and labor are dramatically cheaper and safer, letting us redistribute time toward higher-order pursuits. This is about building abundance at scale.</p>"
+      "title": "News: Funding round",
+      "prompt": "Write a newsletter section about a logistics startup raising a large Series C.",
+      "output": "<h2>Money Loves Momentum</h2>\n<p>I’ve watched founders chase money like it’s the finish line. It isn’t. Capital is oxygen, not a victory lap.</p>\n<p>This round tells you two things: the unit economics are starting to make sense, and the market believes scale is within reach. If neither were true, the check stays in the drawer.</p>\n<p>The question is simple: do you have the machine to turn cash into customers without burning it? If not, this raise just made the fire bigger.</p>\n<p><strong>Playbook</strong></p>\n<ul>\n<li>Map every dollar to a measurable growth lever.</li>\n<li>Lock a 90-day sprint plan before hiring sprees.</li>\n<li>Track payback period weekly, not quarterly.</li>\n</ul>"
     },
     {
-      "title": "TARS partner blurb",
-      "prompt": "Write a short factual blurb advertising TARS Group for an AV ops newsletter (only include if the topic is about AV ops)",
-      "output": "<p><strong>TARS Group</strong> specializes in fleet operations and AV solutions, helping fleets optimize uptime, safety, and operational cost. Learn more: <a href=\"https://tarsgroup.co/\">tarsgroup.co</a></p>"
+      "title": "News: Product launch",
+      "prompt": "Write a newsletter section about a major tech company launching an AI assistant feature to enterprise customers.",
+      "output": "<h2>Enterprise AI Just Went Mainstream</h2>\n<p>I used to think product launches were about features. They aren’t. They’re about positioning. You’re either the default choice or the forgotten tab.</p>\n<p>This release matters because it shifts AI from experimentation to workflow. That means adoption, and adoption means value proof. If it doesn’t save time or make money, it’s dead on arrival.</p>\n<p>So the only question that matters: what job does it kill in the first week?</p>\n<p><strong>Playbook</strong></p>\n<ul>\n<li>Define one killer workflow and measure minutes saved.</li>\n<li>Ship guardrails before you ship scale.</li>\n<li>Turn first-week wins into internal case studies.</li>\n</ul>"
     },
     {
       "title": "Failure & Learning",
@@ -129,6 +129,16 @@
       "title": "Recruiting",
       "prompt": "How to attract top talent.",
       "output": "<h2>Sell the Mission, Not the Perks</h2>\n<p>A-players don't care about ping pong tables. They care about hard problems and smart colleagues. If you want mercenaries, offer money. If you want missionaries, offer meaning.\n\nShow them the mountain. Tell them it will be cold, hard, and dangerous. The right ones will sign up immediately.</p>"
+    },
+    {
+      "title": "Tesla style excerpt",
+      "prompt": "Write a concise paragraph in the tone of Tesla Master Plan Part IV about autonomy enabling sustainable abundance.",
+      "output": "<p>Autonomy scaled properly unlocks a future where transport and labor are dramatically cheaper and safer, letting us redistribute time toward higher-order pursuits. This is about building abundance at scale.</p>"
+    },
+    {
+      "title": "TARS partner blurb",
+      "prompt": "Write a short factual blurb advertising TARS Group for an AV ops newsletter (only include if the topic is about AV ops)",
+      "output": "<p><strong>TARS Group</strong> specializes in fleet operations and AV solutions, helping fleets optimize uptime, safety, and operational cost. Learn more: <a href=\"https://tarsgroup.co/\">tarsgroup.co</a></p>"
     }
   ]
 }

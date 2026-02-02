@@ -21,6 +21,12 @@ class Settings:
     ollama_model: str = os.getenv("OLLAMA_MODEL", "llama3.1:8b-instruct")
     llm_provider: str = os.getenv("LLM_PROVIDER", "ollama")  # 'ollama' or 'gemini'
 
+    # Style & voice
+    style_name: str = os.getenv("STYLE_NAME", "bartlett_hormozi")
+    style_examples_count: int = int(os.getenv("STYLE_EXAMPLES_COUNT", "3"))
+    voice_polish: bool = os.getenv("VOICE_POLISH", "true").lower() in {"1", "true", "yes", "on"}
+    voice_polish_passes: int = int(os.getenv("VOICE_POLISH_PASSES", "1"))
+
     # Gemini
     gemini_api_key: str | None = os.getenv("GEMINI_API_KEY")
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest")

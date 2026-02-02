@@ -80,16 +80,19 @@ def _load_style_assets(style_name: str = "bartlett_hormozi") -> tuple[str, list]
     return guide, examples
 
 
-def generate_with_style(task_prompt: str, style_name: str = "bartlett_hormozi") -> str:
+def generate_with_style(task_prompt: str, style_name: Optional[str] = None, examples_limit: Optional[int] = None) -> str:
     """Compose a prompt using the selected style guide and few-shot examples and call the default chat provider."""
-    guide, examples = _load_style_assets(style_name)
+    style = style_name or settings.style_name or "bartlett_hormozi"
+    limit = settings.style_examples_count if examples_limit is None else examples_limit
+    guide, examples = _load_style_assets(style)
     system_parts = [guide] if guide else []
     # include example prompts in system message to bias the model
-    for ex in examples[:3]:
-        p = ex.get('prompt') if isinstance(ex, dict) else None
-        out = ex.get('output') if isinstance(ex, dict) else None
-        if p and out:
-            system_parts.append(f"Example prompt:\n{p}\nExample output:\n{out}")
+    if isinstance(limit, int) and limit > 0:
+        for ex in examples[:limit]:
+            p = ex.get("prompt") if isinstance(ex, dict) else None
+            out = ex.get("output") if isinstance(ex, dict) else None
+            if p and out:
+                system_parts.append(f"Example prompt:\n{p}\nExample output:\n{out}")
     system = "\n\n".join([s for s in system_parts if s]) or "You are an expert newsletter writer."
     # call whichever provider is configured
     return simple_chat(system, task_prompt)
