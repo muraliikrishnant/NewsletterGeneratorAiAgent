@@ -18,15 +18,16 @@ Then open your browser to `http://localhost:3000`
 
 ## Deployment
 
-### Backend Deployment (Render.com - Free)
+### Backend Deployment (Render.com)
 
 1. **Sign up for Render**: Go to [render.com](https://render.com) and connect your GitHub account
 2. **Create New Web Service**: Click "New +" → "Web Service"
 3. **Connect Repository**: Select your `NewsletterAIAgent_Tars` repository
 4. **Auto-Deploy**: Render will detect `render.yaml` and configure automatically
 5. **Add Environment Variables** in Render Dashboard:
-   - `LLM_PROVIDER=gemini`
-   - `GEMINI_API_KEY=your_key`
+   - `LLM_PROVIDER=ollama`
+   - `OLLAMA_HOST=http://your-ollama-host:11434` (must be reachable from Render)
+   - `OLLAMA_MODEL=llama3.1:8b-instruct`
    - `TAVILY_API_KEY=your_key`
    - `SMTP_USERNAME=your_gmail`
    - `SMTP_PASSWORD=your_app_password`

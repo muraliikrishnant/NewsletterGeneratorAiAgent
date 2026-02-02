@@ -1,0 +1,10 @@
+# Example Ollama Modelfile for LoRA adapter usage
+# See Ollama Modelfile docs for the ADAPTER directive.
+
+FROM llama3.1:8b-instruct
+
+# Path to your LoRA adapter (relative or absolute)
+ADAPTER ./adapter
+
+# Optional system prompt to lock the newsletter voice
+SYSTEM "Write in a blended Steven Bartlett + Alex Hormozi-inspired voice. Output HTML using <h2>, <p>, <ul>, <li> only."

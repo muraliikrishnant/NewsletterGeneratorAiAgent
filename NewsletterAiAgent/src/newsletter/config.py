@@ -27,6 +27,20 @@ class Settings:
     voice_polish: bool = os.getenv("VOICE_POLISH", "true").lower() in {"1", "true", "yes", "on"}
     voice_polish_passes: int = int(os.getenv("VOICE_POLISH_PASSES", "1"))
 
+    # Word limits
+    min_words: int = int(os.getenv("MIN_WORDS", "100"))
+    max_words: int = int(os.getenv("MAX_WORDS", "5000"))
+
+    # Local image generation (optional)
+    image_provider: str = os.getenv("IMAGE_PROVIDER", "tavily")  # 'tavily' or 'auto1111'
+    auto1111_url: str = os.getenv("AUTO1111_URL", "http://127.0.0.1:7860")
+    image_count: int = int(os.getenv("IMAGE_COUNT", "2"))
+    image_width: int = int(os.getenv("IMAGE_WIDTH", "768"))
+    image_height: int = int(os.getenv("IMAGE_HEIGHT", "512"))
+    image_steps: int = int(os.getenv("IMAGE_STEPS", "20"))
+    image_cfg_scale: float = float(os.getenv("IMAGE_CFG_SCALE", "7"))
+    image_sampler: str = os.getenv("IMAGE_SAMPLER", "Euler")
+
     # Gemini
     gemini_api_key: str | None = os.getenv("GEMINI_API_KEY")
     gemini_model: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest")

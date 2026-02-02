@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from newsletter.run import build_newsletter
+from newsletter.config import settings
 from newsletter.writer import revise_with_feedback
 from newsletter.email_client import validate_email_settings, send_email
 
@@ -24,13 +25,19 @@ def read_root():
 @app.get("/models")
 def list_models():
     try:
-        from NewsletterAiAgent.src.newsletter.llm import _get_gemini_client
+        if (settings.llm_provider or "ollama").lower() == "ollama":
+            import requests
+            url = settings.ollama_host.rstrip("/") + "/api/tags"
+            resp = requests.get(url, timeout=10)
+            resp.raise_for_status()
+            data = resp.json()
+            models = [m.get("name") for m in data.get("models", []) if isinstance(m, dict) and m.get("name")]
+            return {"models": models}
+        # fallback to gemini list when configured
+        from newsletter.llm import _get_gemini_client
         client = _get_gemini_client()
         models = []
         for m in client.models.list():
-            # Just return the name (or display_name if available)
-            # The SDK object likely has 'name', 'display_name'.
-            # To be safe, we'll try to get name, or fallback to str(m)
             name = getattr(m, 'name', str(m))
             models.append(name)
         return {"models": models}

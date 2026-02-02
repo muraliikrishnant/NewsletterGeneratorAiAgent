@@ -37,6 +37,15 @@ Outputs:
 Use the dataset format your provider requires. If they accept chat JSONL with `messages`, you can use
 `finetune_chat.jsonl`. Otherwise, adapt `finetune_pairs.jsonl` to the required schema.
 
+### Ollama + LoRA (local)
+If you train a LoRA adapter locally, you can package it with Ollama using a Modelfile:
+
+```
+ollama create bartlett-hormozi -f NewsletterAiAgent/training/ollama/Modelfile.example
+```
+
+Set `OLLAMA_MODEL=bartlett-hormozi` in `.env` to use it.
+
 ## 4) Wire the model into the app
 
 Once you have a fine-tuned model ID or local model name:

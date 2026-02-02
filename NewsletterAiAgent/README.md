@@ -5,7 +5,7 @@ An end-to-end Python project that builds a research-backed business newsletter u
 ## What it does
 - Takes a prompt/brief
 - Uses Tavily for initial research and topic deep-dives (with raw content + images)
-- Uses Gemini LLM to plan title + topics, write three sections, and merge to an HTML email
+- Uses a local LLM (Ollama by default) to plan title + topics, write three sections, and merge to an HTML email
 - Adds image links to the email body
 - Sends a draft email to reviewers and waits for feedback
 - If approved → sends final. If declined → revises with LLM and loops (max N times)
@@ -62,6 +62,18 @@ cp .env.example .env
 - `STYLE_EXAMPLES_COUNT=3` (how many few-shot examples to include)
 - `VOICE_POLISH=true` (adds a final voice pass)
 - `VOICE_POLISH_PASSES=1` (increase if you want stronger voice lock-in)
+
+### Word count limits
+- Defaults to 100–5000 words on the backend (customize via `MIN_WORDS` and `MAX_WORDS` in `.env`).
+- The frontend slider defaults to 100–500 to keep UI fast; you can still pass higher values via CLI or API.
+
+### Local image generation (optional)
+If you want free local images, run a local AUTOMATIC1111 Stable Diffusion WebUI and set:
+- `IMAGE_PROVIDER=auto1111`
+- `AUTO1111_URL=http://127.0.0.1:7860`
+- Optional: `IMAGE_COUNT`, `IMAGE_WIDTH`, `IMAGE_HEIGHT`, `IMAGE_STEPS`, `IMAGE_CFG_SCALE`, `IMAGE_SAMPLER`
+
+Generated images are embedded as data-URIs for preview; some email clients may block them.
 
 ## Run it
 ```

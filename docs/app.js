@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (buildBtn) {
     buildBtn.addEventListener('click', async () => {
       const prompt = promptEl ? promptEl.value.trim() : '';
-      const words = parseInt(wordsInput ? wordsInput.value : '800', 10);
+      const words = parseInt(wordsInput ? wordsInput.value : '300', 10);
       if (!prompt) {
         toast('Enter a topic or topic context to build.', 'error');
         return;
@@ -113,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (sendBtn) {
     sendBtn.addEventListener('click', async () => {
       const prompt = promptEl ? promptEl.value.trim() : '';
-      const words = parseInt(wordsInput ? wordsInput.value : '800', 10);
+      const words = parseInt(wordsInput ? wordsInput.value : '300', 10);
       if (!prompt) {
         toast('Enter a topic before starting HITL.', 'error');
         return;
