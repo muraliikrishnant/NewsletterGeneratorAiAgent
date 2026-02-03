@@ -25,3 +25,17 @@ body{font-family:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial
 /* Dark mode toggle support */
 .dark .btn-muted{background:#0b1220;color:#e5e7eb;border-color:#1e293b}
 .dark .chip{border-color:#1e293b;background:#0b1220;color:#cbd5e1}
+
+/* Dark mode overrides */
+.dark body{background:#0b1220;color:#e5e7eb}
+.dark .bg-white{background:#0f172a!important}
+.dark .bg-slate-50{background:#0b1220!important}
+.dark .text-slate-800{color:#e5e7eb!important}
+.dark .text-slate-700{color:#cbd5e1!important}
+.dark .text-slate-600{color:#cbd5e1!important}
+.dark .text-slate-500{color:#94a3b8!important}
+.dark .border-slate-200{border-color:#1e293b!important}
+.dark .border-slate-300{border-color:#334155!important}
+.dark .bg-slate-50\/50{background:#111827!important}
+.dark .chip{border-color:#1e293b;background:#0b1220;color:#cbd5e1}
+.dark iframe{background:#0b1220}

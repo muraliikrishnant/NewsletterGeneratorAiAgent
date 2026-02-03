@@ -1,16 +1,17 @@
-// VERSION: 2.0.2 - FRONTEND HITL ENABLED
+// VERSION: 2.0.3 - FRONTEND HITL + THEME TOGGLE FIXES
 // Sophisticated frontend logic for Newsletter Studio
 const el = id => document.getElementById(id);
 
-// Auto-detect API base: check input field first, then default to current host or hardcoded production URL
+// Auto-detect API base: check input field first, then default to current host or localhost
 function getApiBase() {
   const customUrl = el('backendUrl') ? el('backendUrl').value.trim() : '';
-  if (customUrl) return customUrl.replace(/\/$/, ""); 
-  
-  if (window.location.hostname.includes('github.io') || window.location.hostname.includes('onrender.com')) {
-    return 'https://newsletteraiagent.onrender.com';
+  if (customUrl) return customUrl.replace(/\/$/, "");
+
+  if (window.API_BASE) return window.API_BASE.replace(/\/$/, "");
+  if (window.location.hostname.includes('onrender.com')) {
+    return window.location.origin;
   }
-  return window.API_BASE || 'http://127.0.0.1:8000';
+  return 'http://127.0.0.1:8000';
 }
 
 // UI helpers
@@ -42,12 +43,35 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewEl = el('preview');
   const subEl = el('subject');
   const backendUrlInput = el('backendUrl');
+  let lastStatusTs = 0;
+  let minStatusTs = 0;
+
+  function setPreview(html, subject) {
+    if (subEl && subject) subEl.textContent = subject;
+    if (previewEl) previewEl.srcdoc = html || '';
+  }
+
+  function clearPreview() {
+    if (subEl) subEl.textContent = 'Ready to build...';
+    if (previewEl) previewEl.srcdoc = '';
+  }
 
   // Load backend URL from storage if exists
   const savedUrl = localStorage.getItem('tars_backend_url');
   if (savedUrl && backendUrlInput) backendUrlInput.value = savedUrl;
   if (backendUrlInput) {
     backendUrlInput.addEventListener('input', e => localStorage.setItem('tars_backend_url', e.target.value));
+  }
+
+  // Theme toggle
+  const themeToggle = el('themeToggle');
+  const savedTheme = localStorage.getItem('tars_theme') || 'light';
+  document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('tars_theme', isDark ? 'dark' : 'light');
+    });
   }
 
   // Sync words range and input
@@ -83,6 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
         toast('Enter a topic or topic context to build.', 'error');
         return;
       }
+      clearPreview();
+      lastStatusTs = 0;
+      minStatusTs = Math.floor(Date.now() / 1000);
       setStatus('Generating initial newsletter... Please wait.');
       setChip('chipBuilt', 'Building…', 'info');
       try {
@@ -96,8 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error(`Build failed (${resp.status}): ${txt.substring(0, 100)}`);
         }
         const data = await resp.json();
-        if (subEl) subEl.textContent = data.subject || 'Newsletter';
-        if (previewEl) previewEl.srcdoc = data.html || '';
+        setPreview(data.html || '', data.subject || 'Newsletter');
         setStatus('Newsletter Generated (Local Preview).');
         setChip('chipBuilt', 'Built', 'success');
         toast('Draft generated successfully.', 'success');
@@ -118,6 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
         toast('Enter a topic before starting HITL.', 'error');
         return;
       }
+      clearPreview();
+      lastStatusTs = 0;
+      minStatusTs = Math.floor(Date.now() / 1000);
       setStatus('Starting Human-in-the-Loop process...');
       setChip('chipSent', 'Starting…', 'info');
       try {
@@ -128,12 +157,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (!resp.ok) throw new Error('Failed to start HITL process.');
         const data = await resp.json();
-        if (subEl) subEl.textContent = data.subject || 'Newsletter';
-        if (previewEl) previewEl.srcdoc = data.html || '';
+        setPreview(data.html || '', data.subject || 'Newsletter');
         setStatus('HITL Started. Review draft below.');
         setChip('chipSent', 'HITL Active', 'success');
         toast('HITL process started. Check the box below the preview.', 'success');
-        pollStatus(); 
+        pollStatus();
       } catch (e) {
         toast(e.message, 'error');
         setChip('chipSent', 'Error', 'warn');
@@ -177,11 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         if (!resp.ok) throw new Error('AI revision failed.');
         const data = await resp.json();
-        if (subEl) subEl.textContent = data.subject || 'Newsletter';
-        if (previewEl) previewEl.srcdoc = data.html || '';
+        setPreview(data.html || '', data.subject || 'Newsletter');
         toast('Newsletter revised successfully.', 'success');
         setStatus('Revised version ready for review.');
-        el('feedback').value = ''; 
+        el('feedback').value = '';
         pollStatus();
       } catch (e) {
         toast(e.message, 'error');
@@ -192,27 +219,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // Start polling status
   pollStatus();
   setInterval(pollStatus, 5000);
-});
 
-async function pollStatus() {
-  try {
-    const resp = await fetch(`${getApiBase()}/status`, { method: 'GET' });
-    if (!resp.ok) return;
-    const s = await resp.json();
-    const txt = s.status || 'none';
-    
-    if (txt === 'waiting_approval' || txt === 'approved') {
-        const subEl = el('subject');
-        const previewEl = el('preview');
-        if (subEl && s.subject) subEl.textContent = s.subject;
-        if (previewEl && s.html && !previewEl.srcdoc) {
-             previewEl.srcdoc = s.html;
+  async function pollStatus() {
+    try {
+      const resp = await fetch(`${getApiBase()}/status`, { method: 'GET' });
+      if (!resp.ok) return;
+      const s = await resp.json();
+      const txt = s.status || 'none';
+
+      if (txt === 'none') {
+        clearPreview();
+      }
+
+      if (s.updated_at && s.updated_at < minStatusTs) return;
+      if (s.updated_at && s.updated_at > lastStatusTs) {
+        lastStatusTs = s.updated_at;
+        if (s.subject || s.html) {
+          setPreview(s.html || '', s.subject || 'Newsletter');
         }
-    }
+      }
 
-    const details = el('statusDetails');
-    if (details) {
-      details.innerHTML = `
+      const details = el('statusDetails');
+      if (details) {
+        details.innerHTML = `
         <div class="space-y-2">
             <div class="flex items-center justify-between text-xs">
                 <span class="text-slate-500">Current Phase:</span>
@@ -221,29 +250,30 @@ async function pollStatus() {
             ${s.updated_at ? `<div class="text-[10px] text-slate-400 text-right">Updated: ${new Date(s.updated_at * 1000).toLocaleTimeString()}</div>` : ''}
         </div>
       `;
-    }
-
-    // Show/Hide HITL Box
-    const hitlBox = el('hitlBox');
-    if (hitlBox) {
-      if (txt === 'waiting_approval') {
-        hitlBox.classList.remove('hidden');
-      } else {
-        hitlBox.classList.add('hidden');
       }
-    }
 
-    // Chip & Global Status
-    if (txt === 'waiting_approval') {
-      setStatus('Waiting for your review/approval.');
-      setChip('chipSent', 'HITL Active', 'success');
-      setChip('chipApproved', 'Pending', 'info');
-    } else if (txt === 'approved') {
-      setStatus('Final newsletter approved and sent.');
-      setChip('chipSent', 'Complete', 'success');
-      setChip('chipApproved', 'Approved', 'success');
+      // Show/Hide HITL Box
+      const hitlBox = el('hitlBox');
+      if (hitlBox) {
+        if (txt === 'waiting_approval') {
+          hitlBox.classList.remove('hidden');
+        } else {
+          hitlBox.classList.add('hidden');
+        }
+      }
+
+      // Chip & Global Status
+      if (txt === 'waiting_approval') {
+        setStatus('Waiting for your review/approval.');
+        setChip('chipSent', 'HITL Active', 'success');
+        setChip('chipApproved', 'Pending', 'info');
+      } else if (txt === 'approved') {
+        setStatus('Final newsletter approved and sent.');
+        setChip('chipSent', 'Complete', 'success');
+        setChip('chipApproved', 'Approved', 'success');
+      }
+    } catch (e) {
+      // Fail silently for polling
     }
-  } catch (e) {
-    // Fail silently for polling
   }
-}
+});
