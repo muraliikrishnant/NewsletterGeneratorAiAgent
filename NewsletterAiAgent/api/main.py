@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from newsletter.run import build_newsletter
+from newsletter.hitl import review_loop
 from newsletter.config import settings
 from newsletter.writer import revise_with_feedback
 from newsletter.email_client import validate_email_settings, send_email
@@ -211,13 +212,18 @@ def build(req: BuildReq):
 
 
 @app.post('/send')
-def send(req: SendReq):
+def send(req: SendReq, background_tasks: BackgroundTasks):
     try:
         # 1. Generate the newsletter logic synchronously
         subject, html = build_newsletter(req.prompt, words_limit=req.words)
         
-        # 2. Save draft to hitl_status.json for frontend approval
-        recipients = os.getenv('RECIPIENTS', '').split(',') if os.getenv('RECIPIENTS') else [os.getenv('SMTP_USERNAME')]
+        # 2. Determine recipients and start HITL email loop in background
+        recipients = settings.default_recipients or []
+        if not recipients:
+            fallback = settings.smtp_username or settings.from_email
+            recipients = [fallback] if fallback else []
+        if not recipients:
+            raise RuntimeError("No recipients configured. Set RECIPIENTS or SMTP_USERNAME/FROM_EMAIL.")
         
         status_path = os.path.join(os.getcwd(), 'hitl_status.json')
         data = {
@@ -234,7 +240,10 @@ def send(req: SendReq):
         with open(os.path.join(os.getcwd(), 'generated_from_prompt.html'), 'w', encoding='utf-8') as f:
             f.write(html)
         
-        # 3. Return immediate success
+        # 3. Kick off HITL email loop in background
+        background_tasks.add_task(review_loop, subject, html, recipients)
+
+        # 4. Return immediate success
         return {
             'status': 'waiting_approval',
             'subject': subject,
